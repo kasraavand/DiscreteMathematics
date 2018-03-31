@@ -5,13 +5,14 @@ class NodeExist(Exception):
     pass
 
 
-class Node:
+class Node(Graph):
     def __init__(self, *args):
         self.id = uuid1()
         # name is a hashable unique property of node 
         self.name = args[0]
         self.value = args[1]
         self.neighbors = set()
+        self.sorted_neighbors = None
 
     def add_neigbor(self, node_id):
         self.neighbors.add(node_id)
@@ -19,6 +20,14 @@ class Node:
     def is_neighbor(self, node):
         return node.id in self.neighbors
 
+    def __getattribute__(self, attr):
+        if attr == 'neighbors':
+            if not self.sorted_neighbors:
+                self.sorted_neighbors = sorted(self.neighbors, key=lambda x: self.get_weight(self, x))
+            return self.sorted_neighbors
+        else:
+            return super().__getattribute__(self, attr)
+    
     def __hash__(self):
         return hash(self.id)
     
@@ -68,7 +77,7 @@ class Graph:
         and a list of direction and weight of the edge as value
         e.g. node2=[10.5, -1]   
         """
-        if name not in self.nodes:x
+        if name not in self.nodes:
             node = Node(name)
             self.nodes[name] = Node(name)
             for name, (weight, direction) in adjacents.items():
@@ -81,10 +90,12 @@ class Graph:
     def delete_node(self, node):
         self.nodes.remove(node.name)
 
-
     def get_edge(self, node_1, node_2):
-        return self.edges[(node_1, node_2)]
+        return self.edges[(node_1.id, node_2.id)]
 
+    def get_weight(self, node_1, node_2):
+        edge = self.get_edge(node_1, node_2)
+        return edge.weight
 
     def get_all_edges(self, node, *neighbors):
         for n in neighbors:
