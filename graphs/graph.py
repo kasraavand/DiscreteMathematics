@@ -6,7 +6,7 @@ class NodeExist(Exception):
     pass
 
 
-class Node(Graph):
+class Node():
     def __init__(self, *args):
         self.id = uuid1()
         # name is a hashable unique property of node 
@@ -30,8 +30,8 @@ class Node(Graph):
 
 class Edge:
     def __init__(self, _left, _right, weight=0, direction=True):
-        self.left = left
-        self.right = right
+        self.left = _left
+        self.right = _right
         self.weight = weight
         # If default direction is set from left to right
         self._direction = direction
@@ -71,11 +71,15 @@ class Graph:
         e.g. node2=[10.5, -1]   
         """
         if name not in self.nodes:
-            node = Node(name)
-            self.nodes[name] = Node(name)
+            node = Node(name, value)
+            self.nodes[name] = Node(name, value)
             for name, (weight, direction) in adjacents.items():
-                edge = Edge(node, self.nodes[name], weight=weight, direction=direction)
-                self[(node.name, name)] = edge
+                try:
+                    adj = self.nodes[name]
+                except KeyError:
+                    adj = self.nodes[name] = Node(name, value)
+                edge = Edge(node, adj, weight=weight, direction=direction)
+                self.edges[(node.name, name)] = edge
         else:
             # raise NodeExist
             pass
@@ -94,6 +98,6 @@ class Graph:
         for n in neighbors:
             yield self.get_edge(node, n)
 
-    @lru_cache
+    @lru_cache(None)
     def get_sorted_neighbors(self, node):
         return sorted(node.neighbors, key=lambda n: self.getweight(node, n))
