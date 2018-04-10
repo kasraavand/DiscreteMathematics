@@ -1,4 +1,4 @@
-Yet to be explored toppics:
+## Yet to be explored toppics<sup>*</sup>:
 
 1- The Foundations: Logic and Proofs
 
@@ -23,3 +23,9 @@ Yet to be explored toppics:
 12- Boolean Algebra
 
 13- Modeling Computation
+
+-----------------
+
+<sub>
+* From Discrete Mathematics and Its Applications by Kenneth H. Rosen
+</sub>
