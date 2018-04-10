@@ -1,4 +1,5 @@
 from uuid import uuid1
+from functools import lru_cache
 
 
 class NodeExist(Exception):
@@ -19,14 +20,6 @@ class Node(Graph):
 
     def is_neighbor(self, node):
         return node.id in self.neighbors
-
-    def __getattribute__(self, attr):
-        if attr == 'neighbors':
-            if not self.sorted_neighbors:
-                self.sorted_neighbors = sorted(self.neighbors, key=lambda x: self.get_weight(self, x))
-            return self.sorted_neighbors
-        else:
-            return super().__getattribute__(self, attr)
     
     def __hash__(self):
         return hash(self.id)
@@ -59,7 +52,7 @@ class Graph:
         self.nodes = {}
         self.edges = {}
         self.string_repr = "graph: {} nodes and {} edges"
-
+ 
     def __getitem__(self, name):
         return self.nodes[name]
 
@@ -100,3 +93,7 @@ class Graph:
     def get_all_edges(self, node, *neighbors):
         for n in neighbors:
             yield self.get_edge(node, n)
+
+    @lru_cache
+    def get_sorted_neighbors(self, node):
+        return sorted(node.neighbors, key=lambda n: self.getweight(node, n))
