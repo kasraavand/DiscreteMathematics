@@ -1,5 +1,6 @@
 from uuid import uuid1
 from functools import lru_cache
+from operator import itemgetter
 
 
 class NodeExist(Exception):
@@ -13,10 +14,9 @@ class Node():
         self.name = args[0]
         self.value = args[1]
         self.neighbors = set()
-        self.sorted_neighbors = None
 
-    def add_neigbor(self, node_id):
-        self.neighbors.add(node_id)
+    def add_neigbor(self, node_name):
+        self.neighbors.add(node_name)
 
     def is_neighbor(self, node):
         return node.id in self.neighbors
@@ -26,6 +26,12 @@ class Node():
     
     def __eq__(self, node):
         return self.id is node.id
+    
+    def __str__(self):
+        return f"Node object: {self.name}"
+    
+    def __iter__(self):
+        return iter([self])
 
 
 class Edge:
@@ -60,9 +66,8 @@ class Graph:
         return self.string_repr.format(len(self.nodes),
                                        len(self.edges))
     
-    def __str__():
-        return self.string_repr.format(len(self.nodes),
-                                       len(self.edges))
+    def __str__(self):
+        return str({n: val.neighbors for n, val in self.nodes.items()})
 
     def add_node(self, name, value, **adjacents):
         """
@@ -72,14 +77,26 @@ class Graph:
         """
         if name not in self.nodes:
             node = Node(name, value)
-            self.nodes[name] = Node(name, value)
-            for name, (weight, direction) in adjacents.items():
+            self.nodes[name] = node
+            for ne, (weight, direction) in adjacents.items():
                 try:
-                    adj = self.nodes[name]
+                    adj = self.nodes[ne]
                 except KeyError:
-                    adj = self.nodes[name] = Node(name, value)
-                edge = Edge(node, adj, weight=weight, direction=direction)
-                self.edges[(node.name, name)] = edge
+                    self.nodes[ne] = adj = Node(ne, weight)
+                adj.add_neigbor(name)
+                node.add_neigbor(ne)
+                try:
+                    edge = self.edges[(node.name, ne)]
+                except KeyError:
+                    edge = Edge(node, adj, weight=weight, direction=direction)
+                    self.edges[(node.name, ne)] = edge
+                
+                else:
+                    if direction == edge.direction:
+                        raise Exception("Mismatch between dierctions for Edge ({}, {})".format(node.name, name))
+                    else:
+                        edge.direction = 0
+
         else:
             # raise NodeExist
             pass
@@ -88,8 +105,10 @@ class Graph:
         self.nodes.remove(node.name)
 
     def get_edge(self, node_1, node_2):
-        return self.edges[(node_1.id, node_2.id)]
-
+        try:
+            return self.edges[(node_1.name, node_2.name)]
+        except:
+            return self.edges[(node_2.name, node_1.name)]
     def get_weight(self, node_1, node_2):
         edge = self.get_edge(node_1, node_2)
         return edge.weight
@@ -100,4 +119,8 @@ class Graph:
 
     @lru_cache(None)
     def get_sorted_neighbors(self, node):
-        return sorted(node.neighbors, key=lambda n: self.getweight(node, n))
+        snids = sorted(node.neighbors, key=lambda n: self.get_weight(node, self.nodes[n]))
+        try:
+            return itemgetter(*snids)(self.nodes)
+        except TypeError:
+            return []
