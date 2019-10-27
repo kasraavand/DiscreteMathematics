@@ -21,7 +21,7 @@
 
 #This code works for graphs with nodes positioned just like a ring network topology and numbered by crescent order.
 
-
+import os 
 def main(args):
 	#initializes a nxn matrix full of zeros
 	n=int(input("the number of nodes in this graph: "))
@@ -49,6 +49,7 @@ def main(args):
 		for item in column:
 			print(item,end=" ")
 		print("")
+	input()
 		
 	
 	return 0
